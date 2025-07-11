@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Tic Tac Toe with Win Line</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #f0f0f0;
+    }
+
+    h1 {
+      margin-top: 30px;
+    }
+
+    #game-container {
+      position: relative;
+      width: 320px;
+      margin: 20px auto;
+    }
+
+    #game-board {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      grid-gap: 10px;
+      background-color: #f0f0f0;
+    }
+
+    .cell {
+      width: 100px;
+      height: 100px;
+      font-size: 2.5rem;
+      background-color: white;
+      border: 2px solid #333;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    #status {
+      margin-top: 20px;
+      font-size: 1.2rem;
+    }
+
+    #reset {
+      margin-top: 15px;
+      padding: 10px 20px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    /* Winning Line */
+    .win-line {
+      position: absolute;
+      height: 4px;
+      background: red;
+      z-index: 2;
+      transform-origin: left;
+      transform: scaleX(0);
+      transition: transform 0.5s ease;
+    }
+
+    .show {
+      transform: scaleX(1);
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Tic Tac Toe</h1>
+  <div id="game-container">
+    <div id="game-board"></div>
+    <div class="win-line" id="win-line"></div>
+  </div>
+
+  <div id="status">Current Turn: X</div>
+  <button id="reset">Restart Game</button>
+
+  <script>
+    const board = document.getElementById('game-board');
+    const statusText = document.getElementById('status');
+    const resetButton = document.getElementById('reset');
+    const winLine = document.getElementById('win-line');
+
+    let currentPlayer = 'X';
+    let gameActive = true;
+    let gameState = ["", "", "", "", "", "", "", "", ""];
+
+    const winPatterns = [
+      [0, 1, 2], // top row
+      [3, 4, 5], // middle row
+      [6, 7, 8], // bottom row
+      [0, 3, 6], // left column
+      [1, 4, 7], // middle column
+      [2, 5, 8], // right column
+      [0, 4, 8], // diag TL-BR
+      [2, 4, 6]  // diag TR-BL
+    ];
+
+    const winLineStyles = [
+      { top: "50px", left: "0", width: "310px", rotate: "0deg" },    // 0: row 1
+      { top: "160px", left: "0", width: "310px", rotate: "0deg" },   // 1: row 2
+      { top: "270px", left: "0", width: "310px", rotate: "0deg" },   // 2: row 3
+      { top: "0", left: "50px", height: "310px", width: "4px", rotate: "0deg" },   // 3: col 1
+      { top: "0", left: "160px", height: "310px", width: "4px", rotate: "0deg" },  // 4: col 2
+      { top: "0", left: "270px", height: "310px", width: "4px", rotate: "0deg" },  // 5: col 3
+      { top: "0", left: "0", width: "438px", rotate: "45deg" },                     // 6: diag \
+      { top: "0", left: "0", width: "438px", rotate: "-45deg" }                    // 7: diag /
+    ];
+
+    // Create cells
+    for (let i = 0; i < 9; i++) {
+      const cell = document.createElement('div');
+      cell.classList.add('cell');
+      cell.dataset.index = i;
+      board.appendChild(cell);
+    }
+
+    const cells = document.querySelectorAll('.cell');
+
+    function handleClick(e) {
+      const index = e.target.dataset.index;
+
+      if (gameState[index] !== "" || !gameActive) return;
+
+      gameState[index] = currentPlayer;
+      e.target.textContent = currentPlayer;
+
+      const winIndex = checkWin();
+      if (winIndex !== -1) {
+        statusText.textContent = `🎉 Player ${currentPlayer} Wins!`;
+        showWinLine(winIndex);
+        gameActive = false;
+        return;
+      }
+
+      if (!gameState.includes("")) {
+        statusText.textContent = "It's a Draw!";
+        gameActive = false;
+        return;
+      }
+
+      currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+      statusText.textContent = `Current Turn: ${currentPlayer}`;
+    }
+
+    function checkWin() {
+      for (let i = 0; i < winPatterns.length; i++) {
+        const [a, b, c] = winPatterns[i];
+        if (gameState[a] && gameState[a] === gameState[b] && gameState[a] === gameState[c]) {
+          return i; // return index of win pattern
+        }
+      }
+      return -1;
+    }
+
+    function showWinLine(index) {
+      const style = winLineStyles[index];
+      Object.assign(winLine.style, {
+        top: style.top || "0",
+        left: style.left || "0",
+        width: style.width || "4px",
+        height: style.height || "4px",
+        transform: `rotate(${style.rotate})`,
+      });
+      winLine.classList.add("show");
+    }
+
+    function resetGame() {
+      gameState = ["", "", "", "", "", "", "", "", ""];
+      currentPlayer = 'X';
+      gameActive = true;
+      statusText.textContent = `Current Turn: ${currentPlayer}`;
+      cells.forEach(cell => cell.textContent = '');
+      winLine.classList.remove("show");
+    }
+
+    cells.forEach(cell => cell.addEventListener('click', handleClick));
+    resetButton.addEventListener('click', resetGame);
+  </script>
+
+</body>
+</html>
